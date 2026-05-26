@@ -1,0 +1,20 @@
+# ASCII Art Color
+
+A Go program that converts text into ASCII art using a font file and supports optional terminal color output.
+
+## 📌 Features
+
+- Converts input text into ASCII art
+- Supports newline handling (`\n`)
+- Applies optional color using ANSI escape codes
+- Handles invalid characters safely
+- Works with standard ASCII range (32–126)
+
+---
+
+## 🚀 Usage
+
+### Basic
+
+```bash
+go run . "Hello"
