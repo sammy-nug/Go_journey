@@ -1,0 +1,136 @@
+package clicalculator
+package main
+
+import "os"
+
+// parseInt converts a string to int64 manually (no strconv).
+// Returns (value, ok). ok=false if invalid or overflow.
+func parseInt(s string) (int64, bool) {
+	var neg bool
+	var n int64
+
+	if len(s) == 0 {
+		return 0, false
+	}
+
+	// Handle sign
+	if s[0] == '-' {
+		neg = true
+		s = s[1:]
+	} else if s[0] == '+' {
+		s = s[1:]
+	}
+
+	if len(s) == 0 {
+		return 0, false
+	}
+
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return 0, false
+		}
+
+		digit := int64(c - '0')
+
+		// Overflow check (int64 max: 9223372036854775807)
+		if n > (1<<63-1-digit)/10 {
+			return 0, false
+		}
+
+		n = n*10 + digit
+	}
+
+	if neg {
+		n = -n
+	}
+
+	return n, true
+}
+
+// int-to-string conversion without strconv
+func writeInt(n int64) string {
+	if n == 0 {
+		return "0"
+	}
+
+	var neg bool
+	if n < 0 {
+		neg = true
+		n = -n
+	}
+
+	var buf [20]byte
+	i := len(buf)
+
+	for n > 0 {
+		i--
+		buf[i] = byte('0' + (n % 10))
+		n /= 10
+	}
+
+	if neg {
+		i--
+		buf[i] = '-'
+	}
+
+	return string(buf[i:])
+}
+
+func main() {
+	// Check args
+	if len(os.Args) != 4 {
+		return
+	}
+
+	a, ok1 := parseInt(os.Args[1])
+	b, ok2 := parseInt(os.Args[3])
+	op := os.Args[2]
+
+	if !ok1 || !ok2 {
+		return
+	}
+
+	var result int64
+
+	switch op {
+	case "+":
+		result = a + b
+		// manual overflow detection
+		if (a > 0 && b > 0 && result < 0) || (a < 0 && b < 0 && result > 0) {
+			return
+		}
+
+	case "-":
+		result = a - b
+		if (a > 0 && b < 0 && result < 0) || (a < 0 && b > 0 && result > 0) {
+			return
+		}
+
+	case "*":
+		// multiplication overflow check
+		if a != 0 && b != 0 && (a > (1<<63-1)/b || a < (-1<<63)/b) {
+			return
+		}
+		result = a * b
+
+	case "/":
+		if b == 0 {
+			os.Stdout.WriteString("No division by 0\n")
+			return
+		}
+		result = a / b
+
+	case "%":
+		if b == 0 {
+			os.Stdout.WriteString("No modulo by 0\n")
+			return
+		}
+		result = a % b
+
+	default:
+		return
+	}
+
+	// Print result **with newline**
+	os.Stdout.WriteString(writeInt(result) + "\n")
+}
